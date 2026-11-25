@@ -7,6 +7,7 @@ authors:
     affiliation: Politecnico di Torino
     orcid: "https://orcid.org/0009-0008-9261-1007"
 version: 1.0.0
+doi: 10.5281/zenodo.24542921
 date-released: 2026-11-25
 license: Apache-2.0
 repository-code: "https://github.com/KoksalBerkay/bounded-integrated-discrepancy"

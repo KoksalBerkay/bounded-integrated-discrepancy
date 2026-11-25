@@ -1,5 +1,7 @@
 # Bounded integrated discrepancy of greedy L² sequences
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24542921.svg)](https://doi.org/10.5281/zenodo.24542921)
+
 **Author:** Köksal Berkay Denktaş (B.Sc. student in Computer Engineering,
 Politecnico di Torino), ORCID [0009-0008-9261-1007](https://orcid.org/0009-0008-9261-1007)
 
@@ -90,6 +92,13 @@ GPT-6.2 Sol. All theorems are checked by the Lean kernel.
 Copyright 2026 Köksal Berkay Denktaş. Code and data: Apache License 2.0
 (`LICENSE`, `NOTICE`). Paper text: CC BY 4.0 (`paper/LICENSE.md`). Both licenses
 require attribution.
+
+## How to cite
+
+Köksal Berkay Denktaş, *Bounded integrated discrepancy of greedy L² sequences,
+with a Lean formalization* (2026). Zenodo,
+[doi:10.5281/zenodo.24542921](https://doi.org/10.5281/zenodo.24542921).
+GitHub's "Cite this repository" button gives the same reference.
 
 ## References
 
