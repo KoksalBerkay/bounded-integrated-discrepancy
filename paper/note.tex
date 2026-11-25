@@ -1,0 +1,401 @@
+\documentclass[11pt]{amsart}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb,amsthm,mathtools,hyperref}
+\usepackage[margin=1.1in]{geometry}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title[K.~B.~Denkta\c{s} \,---\, Bounded integrated discrepancy of greedy $L^2$ sequences]{Bounded integrated discrepancy of greedy $L^2$ sequences, with a Lean formalization}
+\author{K\"oksal Berkay Denkta\c{s}}
+\address{B.Sc.\ student (third year) in Computer Engineering, Politecnico di Torino, Italy}
+\urladdr{https://orcid.org/0009-0008-9261-1007}
+\date{November 25, 2026}
+
+\begin{document}
+
+\begin{abstract}
+Kritzinger introduced the sequence on $[0,1]$ in which each new point minimises
+the $L^2$ star discrepancy of the extended point list; Steinerberger showed that
+it also arises from greedy minimisation of the Wasserstein distance $W_2$, and
+proved that its integrated discrepancy
+$G_N(t)=\int_0^t(\#\{k\le N:x_k\le s\}-Ns)\,ds$ satisfies
+$\max_t|G_N(t)|\le 2N^{1/3}$ for infinitely many $N$, remarking that it is
+unclear whether $G_N$ is bounded. We prove that every greedy $L^2$ sequence started from the empty set
+satisfies
+\[
+-\tfrac23\;\le\; G_N(t)\;\le\;\tfrac12\qquad\text{for all }N\text{ and all }t\in[0,1].
+\]
+The upper bound comes from two linear envelopes that are preserved by every
+greedy step; the lower bound from a three-point ``chord'' invariant:
+with $p=(t-a)(b-t)$, $G_N$ never falls more than $\sqrt p-\frac p2$ below its
+chord on $[a,b]$.
+Consequences: $|x_1+\dots+x_N-\frac N2|\le\frac12$ for all $N$, and for every
+$f\in C^2[0,1]$ the quadrature error satisfies
+$|\sum_{k\le N}f(x_k)-N\int_0^1f|\le\frac{|f'(1)|}{2}+\frac23\int_0^1|f''|$
+for all $N$, with a sharper one-sided bound for convex $f$. The main bounds and
+the closed-form quadrature identity are verified in the Lean~4 proof assistant
+with Mathlib. Numerically
+$-0.488<G_N<0.491$ for $N\le3\cdot10^5$, and we conjecture $|G_N|\le\frac12$.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+For a list of points $x_1,\dots,x_N\in[0,1]$ (counted with multiplicity) let
+$D_N(t)=\#\{k\le N: x_k\le t\}-Nt$ be the local discrepancy. Schmidt proved
+that every infinite sequence has $\sup_t|D_N(t)|\ge c\log N$ for infinitely
+many $N$, and classical constructions (van der Corput, Kronecker) attain this
+order.
+
+Kritzinger~\cite{Kri} proposed a greedy construction: $x_1=\tfrac12$ and, given
+$x_1,\dots,x_N$, choose $x_{N+1}$ as the least minimiser over $[0,1]$ of the
+$L^2$ star discrepancy $\int_0^1 D_{N+1}(t)^2\,dt$ of the list
+$(x_1,\dots,x_N,x_{N+1})$. He proved that $x_N\in\{\frac{2i+1}{2N}\}$, gave an
+$O(\sqrt N)$ bound for the $L^2$ discrepancy, and conjectured that the star
+discrepancy is $O(\log N)$. In experiments its star discrepancy is
+competitive, on sampled prefixes, with the best known one-dimensional
+constructions \cite{Kri,Ste,Cle}.
+Steinerberger~\cite{Ste} showed that the same sequence arises from greedy $W_2$
+minimisation and proved the first bound below the square-root barrier: for
+infinitely many $N$,
+\[
+\max_{0\le t\le 1}|G_N(t)|\le 2N^{1/3},\qquad
+G_N(t):=\int_0^t D_N(s)\,ds .
+\]
+He remarked that $O(\sqrt{\log N})$ might be the truth and that it is not clear
+whether $G_N$ could even be bounded.
+
+\medskip
+\noindent\textbf{Results.} We call a sequence a \emph{greedy $L^2$ sequence} if
+each $x_{N+1}$ is \emph{some} global minimiser (any tie-break) over $[0,1]$ of
+the $L^2$ star discrepancy of the list $(x_1,\dots,x_N,x)$, starting from the
+empty list (so $x_1=\frac12$). Kritzinger's sequence is one of them.
+
+\begin{theorem}\label{thm:main}
+For every greedy $L^2$ sequence, every $N\ge0$ and every $t\in[0,1]$,
+\[
+-\frac23\;\le\;G_N(t)\;\le\;\min\Bigl(\frac t2,\;G_N(1)+\frac{1-t}{2}\Bigr)\;\le\;\frac12 .
+\]
+\end{theorem}
+
+This answers Steinerberger's question for the sequence started from the empty
+set: the integrated discrepancy of Kritzinger's sequence is bounded, for every
+$N$. The lower part rests on the following invariant (Theorem~\ref{thm:chord}): for all $0\le a\le t\le b\le1$
+with $a<b$,
+\[
+\frac{(b-t)G_N(a)+(t-a)G_N(b)}{b-a}-G_N(t)\;\le\;\sqrt{(t-a)(b-t)}-\frac{(t-a)(b-t)}{2} .
+\]
+Steinerberger's theorem allows an arbitrary finite initial set; our bounds also
+hold after any fixed initial list, with additive constants depending on it
+(Theorem~\ref{thm:start}).
+
+\begin{corollary}\label{cor}
+For every greedy $L^2$ sequence and every $N$:
+$\bigl|\sum_{k=1}^N x_k-\frac N2\bigr|\le\frac12$; and for every
+$f\in C^2[0,1]$,
+\[
+\Bigl|\sum_{k=1}^N f(x_k)-N\int_0^1 f\Bigr|\le \frac{|f'(1)|}{2}+\frac23\int_0^1|f''| .
+\]
+\end{corollary}
+
+So the average $\frac1N\sum_k f(x_k)$ approximates $\int_0^1f$ with error
+$O(1/N)$ and no logarithmic factor, uniformly in $N$, for every $C^2$
+function. For convex $f$ there is a sharper one-sided bound
+(Corollary~\ref{cor:convex}).
+
+\section{The greedy step as a maximisation}
+
+Write $\psi(t)=t(1-t)/2$ and $(u)_+=\max(u,0)$. Since
+$\int_0^t \mathbf 1[x_k\le s]\,ds=(t-x_k)_+$,
+\[
+G_N(t)=\sum_{k=1}^N (t-x_k)_+-\frac{N t^2}{2},\qquad G_N(0)=0,\quad
+G_N(1)=\frac N2-\sum_{k=1}^N x_k .
+\]
+
+\begin{lemma}\label{lem:step}
+Given $x_1,\dots,x_N$, a point $x\in[0,1]$ minimises the $L^2$ star
+discrepancy of the list $(x_1,\dots,x_N,x)$ if and only if it maximises
+$G_N+\psi$ on $[0,1]$. Moreover $G_{N+1}(t)=G_N(t)+(t-x_{N+1})_+-t^2/2$.
+\end{lemma}
+
+\begin{proof}
+By Warnock's formula, the part of $\int_0^1 D_{N+1}^2$ that depends on $x$
+is Kritzinger's function
+$f_N(x)=-2\sum_k\max(x_k,x)+(N+1)x^2-x$ \cite{Kri}. Using
+$\max(a,x)=a+(x-a)_+$ we get
+$f_N(x)=-2\sum_k x_k-2\bigl(G_N(x)+\psi(x)\bigr)$. The update formula is
+immediate from the expression for $G_N$.
+\end{proof}
+
+This is equivalent to the representation in \cite[\S\S2.2--2.3]{Ste}, since
+$(z^3+(1-z)^3)/6=\tfrac16-\psi(z)$. Kritzinger's search over $[0,1)$ and ours
+over $[0,1]$ give the same minimisers, since $f_N'(1^-)>0$. Below, a
+\emph{greedy step} means: $x$ maximises $G+\psi$ on $[0,1]$, and
+$G'=G+(\,\cdot-x)_+-(\cdot)^2/2$. In particular, for all $u\in[0,1]$,
+\begin{equation}\label{eq:max}
+G(u)\le G(x)+\psi(x)-\psi(u).
+\end{equation}
+
+\section{The upper bound}
+
+\begin{theorem}\label{thm:upper}
+For every greedy $L^2$ sequence, every $N\ge0$ and every $t\in[0,1]$,
+\[
+\text{(A)}\quad G_N(t)\le \frac t2,
+\qquad\qquad
+\text{(C)}\quad G_N(t)\le G_N(1)+\frac{1-t}{2}.
+\]
+\end{theorem}
+
+\begin{proof}
+Induction on $N$; $G_0\equiv0$. Assume (A), (C) for $G=G_N$, let $x=x_{N+1}$
+and $G'=G_{N+1}$, so $G'(1)=G(1)+\tfrac12-x$.
+
+\emph{(A).} If $t\le x$ then $G'(t)=G(t)-t^2/2\le t/2$. If $t>x$, by
+\eqref{eq:max} and (A) at $x$,
+$G'(t)\le \frac x2+\psi(x)-\psi(t)+t-x-\frac{t^2}{2}=\frac t2-\frac{x^2}{2}$.
+
+\emph{(C).} If $t\ge x$ then
+$G'(t)-G'(1)=G(t)-G(1)-\frac{(1-t)^2}{2}\le\frac{1-t}{2}$. If $t<x$, by
+\eqref{eq:max} and (C) at $x$,
+$G'(t)-G'(1)=G(t)-\frac{t^2}{2}-G(1)-\frac12+x\le\frac{1-t}{2}-\frac{(1-x)^2}{2}$.
+\end{proof}
+
+(A) at $t=1$ and (C) at $t=0$ give $|G_N(1)|\le\frac12$, which is the first
+claim of Corollary~\ref{cor}. (A) and (C) are exchanged by the reflection
+$G(t)\mapsto G(1-t)-G(1)$, under which the greedy dynamics (with free
+tie-breaking) is invariant.
+
+\subsection*{Arbitrary initial sets}
+Kritzinger already allows arbitrary initial sets \cite[Remark 1]{Kri}, and
+Steinerberger's theorem applies to sequences started from an arbitrary finite
+set; both observe numerically that bad initial configurations are repaired
+\cite{Ste,Cle}. The computation above carries additive constants unchanged:
+
+\begin{theorem}\label{thm:start}
+Let $x_1,\dots,x_m\in[0,1]$ be arbitrary, let every later term be a greedy
+step, and let $e_A,e_C\ge0$ satisfy $G_m(t)\le\frac t2+e_A$ and
+$G_m(t)\le G_m(1)+\frac{1-t}{2}+e_C$ on $[0,1]$. Then the same two
+inequalities hold for every $N\ge m$. In particular $G_N\le\frac12+e_A$ and
+$-\tfrac12-e_A\le \sum_{k\le N}x_k-\tfrac N2\le\tfrac12+e_C$. If moreover
+$\Gamma_{G_m}(a,t,b)\le B+\sqrt{(t-a)(b-t)}$ for all $a<b$ (notation of
+Section~4), then $G_N(t)\ge-(\tfrac12+e_C)t-B-\sqrt{t(1-t)}$ for all $N\ge m$.
+\end{theorem}
+
+The last statement follows from the proof of Theorem~\ref{thm:chord}, in which
+the additive constant $B$ is carried unchanged. Since every finite initial list
+admits such constants, $G_N$ is bounded on both sides for every fixed start.
+
+\section{The lower bound}
+
+For $f:[0,1]\to\mathbb R$ and $a\le t\le b$, $a<b$, write
+$\Gamma_f(a,t,b)=\frac{(b-t)f(a)+(t-a)f(b)}{b-a}-f(t)$ for the amount by which
+$f(t)$ lies below the chord.
+
+\begin{theorem}\label{thm:chord}
+For every greedy $L^2$ sequence, every $N$ and all $0\le a\le t\le b\le 1$
+with $a<b$,
+\[
+\Gamma_{G_N}(a,t,b)\le\sqrt{p}-\frac p2,\qquad p=(t-a)(b-t) .
+\]
+\end{theorem}
+
+\begin{proof}
+Induction on $N$; for $G_0\equiv0$ the left side is $0\le\sqrt p-\frac p2$
+since $p\le\frac14$. Let $x$ be the new point and
+$G'=G+(\,\cdot-x)_+-(\cdot)^2/2$.
+
+\emph{Case $x\le a$ or $x\ge b$.} Then $(\,\cdot-x)_+$ is affine on $[a,b]$,
+and the chord gap of $-u^2/2$ equals $-(t-a)(b-t)/2$. Hence
+\begin{equation}\label{eq:out}
+\Gamma_{G'}(a,t,b)=\Gamma_G(a,t,b)-\tfrac{(t-a)(b-t)}{2},
+\end{equation}
+and $\Gamma_{G'}\le\sqrt p-p\le\sqrt p-\frac p2$.
+
+\emph{Case $a<x<b$.} First, at $t=x$: by \eqref{eq:max} at $a$ and at $b$,
+$\Gamma_G(a,x,b)\le\frac{(b-x)(\psi(x)-\psi(a))+(x-a)(\psi(x)-\psi(b))}{b-a}=\frac{(x-a)(b-x)}{2}$,
+and a direct computation gives
+\begin{equation}\label{eq:in}
+\Gamma_{G'}(a,x,b)=\Gamma_G(a,x,b)+\frac{(x-a)(b-x)}{b-a}-\frac{(x-a)(b-x)}{2}
+\le\frac{(x-a)(b-x)}{b-a}.
+\end{equation}
+Now let $a\le t\le x$ (the case $x\le t\le b$ is symmetric, with
+$u=b-t$, $v=t-x$, $w=x-a$). Chord gaps split:
+$\Gamma_{G'}(a,t,b)=\Gamma_{G'}(a,t,x)+\frac{t-a}{x-a}\Gamma_{G'}(a,x,b)$. On
+$[a,x]$ the new point is an endpoint, so by \eqref{eq:out} and the hypothesis
+$\Gamma_{G'}(a,t,x)\le\sqrt{uv}-uv$, where $u=t-a$, $v=x-t$, $w=b-x$,
+$L=u+v+w=b-a\le1$. With \eqref{eq:in},
+$\Gamma_{G'}(a,t,b)\le\sqrt{uv}-uv+\frac{uw}{L}$, and we need
+\[
+\frac{uw}{L}+\frac{uw-uv}{2}\le r-s,\qquad r=\sqrt{u(v+w)},\ s=\sqrt{uv}.
+\]
+If $u=0$ this is trivial. Otherwise put $q=s/r\in[0,1]$, so $uw=r^2(1-q^2)$ and
+$uv=r^2q^2$; by AM--GM $r\le L/2\le\frac12$, hence $r^2/L\le r/2$ and
+$r^2/2\le r/4$. If $2q^2\le1$ the left side is at most
+$r\frac{1-q^2}{2}+r\frac{1-2q^2}{4}=r(\tfrac34-q^2)\le r(1-q)$, the last step
+being $(q-\tfrac12)^2\ge0$; if $2q^2>1$ it is at most
+$r\frac{1-q^2}{2}\le r(1-q)$. In both cases this is $r-s$.
+\end{proof}
+
+\begin{corollary}\label{cor:lower}
+For every greedy $L^2$ sequence, all $N$ and $t\in[0,1]$:
+$G_N(t)\ge tG_N(1)-\sqrt{t(1-t)}+\frac{t(1-t)}{2}$, and
+$G_N(t)\ge-\frac16-\frac{t(2-t)}{2}\ge-\frac23$.
+\end{corollary}
+
+\begin{proof}
+The first bound is Theorem~\ref{thm:chord} with $a=0$, $b=1$ and $G_N(0)=0$.
+For the second, the case $N=0$ is trivial. For $N\ge1$ let $x=x_N$ be the last
+point. By \eqref{eq:max} with $u=0$, $G_{N-1}(x)+\psi(x)\ge0$, so
+$G_N(x)=G_{N-1}(x)-\frac{x^2}{2}\ge-\frac x2$; this settles $t=x$. If $t<x$ let
+$[a,b]=[0,x]$, if $t>x$ let $[a,b]=[x,1]$. The endpoint values of $G_N$ are at
+least $-\frac a2$ and $-\frac b2$ (using $G_N(0)=0$ and $G_N(1)\ge-\frac12$), so
+the chord at $t$ is at least $-\frac t2$. Since $x$ is an endpoint,
+Theorem~\ref{thm:chord} for $G_{N-1}$ and \eqref{eq:out} give
+$\Gamma_{G_N}(a,t,b)\le\sqrt p-p$ with $p=(t-a)(b-t)\le t(1-t)$. Using
+$\sqrt p\le\frac16+\frac32p$,
+$G_N(t)\ge-\frac t2-\frac16-\frac p2\ge-\frac16-\frac{t(2-t)}{2}\ge-\frac23$.
+\end{proof}
+
+\begin{remark}
+Why three points? Consider two-point families
+$G(t)-G(s)\le\varphi(s,t)$, $G(s)-G(t)\le\chi(s,t)$ and the natural sufficient
+update rules obtained, as in Theorem~\ref{thm:upper}, from \eqref{eq:max} and
+the family itself by case analysis on the position of $x$. With $x=1$ and
+$(s,t)=(0,\frac12)$ these rules require
+$\chi(0,\frac12)\ge\varphi(\frac12,1)+\frac18$, and with $x=0$ and
+$(s,t)=(\frac12,1)$ they require $\varphi(\frac12,1)\ge\chi(0,\frac12)+\frac18$;
+so this particular system has no finite solution. Simple lower bounds such as
+$G\ge-\frac12$ are indeed not preserved by one step for arbitrary point sets:
+from $(0.34,0.52,0.55,0.56)$, which satisfies (A) and (C), the step inserts
+$\frac9{10}$ and then $G(\frac{11}{20})=-\frac{413}{800}$. The chord invariant
+uses three points.
+\end{remark}
+
+\section{Quadrature}\label{sec:quad}
+
+For $f\in C^2[0,1]$ write $E_f(N)=\sum_{k=1}^N f(x_k)-N\int_0^1 f$. Since
+$D_N(0^-)=D_N(1)=0$ and $G_N'=D_N$, two integrations by parts give
+\begin{equation}\label{eq:quad}
+E_f(N)=-\int_0^1 D_N f'\,dt=-f'(1)\,G_N(1)+\int_0^1 G_N(t)\,f''(t)\,dt .
+\end{equation}
+Hence $|E_f(N)|\le\|G_N\|_\infty(|f'(1)|+\|f''\|_{L^1})$, and taking $f'(1)=0$
+with $f''$ concentrated near a point where $|G_N|$ is maximal shows that
+$\sup\{|E_f(N)|:|f'(1)|+\|f''\|_{L^1}\le1\}=\|G_N\|_\infty$. With
+Theorem~\ref{thm:main} and $|G_N(1)|\le\frac12$ this gives the quadrature bound
+in Corollary~\ref{cor}.
+
+\begin{corollary}\label{cor:convex}
+For every greedy $L^2$ sequence, every convex $f\in C^2[0,1]$ and every $N$,
+\[
+E_f(N)\;\le\;\frac{f(0)+f(1)}{2}-f(b_N),
+\qquad b_N:=\frac{N+1}{2}-\sum_{k=1}^N x_k\in[0,1].
+\]
+In particular $E_f(N)\le\frac{f(0)+f(1)}{2}-\min_{[0,1]}f$, with equality in
+the first bound for affine $f$.
+\end{corollary}
+
+\begin{proof}
+$b_N=G_N(1)+\tfrac12\in[0,1]$, and the minimum of (A) and (C) is
+$G_N(t)\le \tfrac t2-(t-b_N)_+$. Insert this into \eqref{eq:quad} using
+$f''\ge0$, and evaluate
+$\int_0^1\tfrac t2 f''=\tfrac{f'(1)}{2}-\tfrac{f(1)-f(0)}{2}$ and
+$\int_0^1(t-b)_+f''=(1-b)f'(1)-f(1)+f(b)$. The terms with $f'(1)$ cancel.
+\end{proof}
+
+For example $\sum_{k\le N}x_k^2-\frac N3\le\frac12$ for every $N$.
+Table~\ref{tab:quad} compares observed errors with the van der Corput sequence
+(base~2) and the golden-ratio Kronecker sequence.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+$f$ & bound & Kritzinger & van der Corput & golden Kronecker\\\hline
+$x$ & $0.500$ & $[-0.491,\,0.485]$ & $[-3.389,\,-0.500]$ & $[-1.334,\,1.311]$\\
+$x^2$ & $0.500$ & $[-0.594,\,0.463]$ & $[-3.426,\,-0.333]$ & $[-1.447,\,1.232]$\\
+$e^x$ & $0.859$ & $[-0.927,\,0.794]$ & $[-5.840,\,-0.718]$ & $[-2.383,\,2.155]$
+\end{tabular}
+\caption{Range of $E_f(N)$ over $N\le 3\cdot10^5$ (floating point), and the
+upper bound $\frac{f(0)+f(1)}{2}-\min f$ of Corollary~\ref{cor:convex}. Van der
+Corput starts at $n=0$, the Kronecker sequence $\{n(\sqrt5-1)/2\}$ at $n=1$.}\label{tab:quad}
+\end{table}
+
+\section{Numerical evidence and the sharp constant}\label{sec:num}
+
+We computed Kritzinger's sequence to $N=3\cdot10^5$ with the equivalent rule
+``insert $\frac{2j+1}{2(N+1)}$ at the least $j$ maximising
+$\sum_{k\le j}(\frac{k}{N+1}-y_k)$'' ($y_k$ the sorted points). Scores are
+computed in floating point and all candidates within $10^{-9}$ of the maximum
+are compared in exact rational arithmetic; we have no rigorous rounding-error
+bound for the excluded candidates, so the long run is empirical. For
+$N\le3\cdot10^4$ it agrees term by term with a second generator that
+minimises $f_N$ directly over the candidate grid (also screening candidates in
+floating point, with exact comparison of near-ties).
+For every $N\le3\cdot10^5$ we found $-0.48764<G_N(t)<0.49086$. The maximum
+occurs at $N=28038$, $t=\frac{9305}{9346}$, and the minimum at $N=222650$,
+$t\approx0.9913$: in both cases near $t=1$, just after a point was inserted
+next to an endpoint. Records of $\max G_N$ and $\min G_N$ were tracked
+separately for every $N$.
+Starting instead from $k$ uniformly random points ($k=1,5,20,100$, three runs
+each), $|G|$ was below $\frac12$ at every fifth $N$ from at most $15$ steps
+after the start up to $N=2\cdot10^4$. We also observe an interval version of the bounds,
+$|G_N(t)-G_N(s)|\le\frac{|t-s|}{2}+0.11$, for every $N\le3000$ and every
+$31$st $N\le3\cdot10^4$.
+
+\begin{conjecture}
+For Kritzinger's sequence, $|G_N(t)|\le\frac12$ for all $N$ and $t\in[0,1]$.
+\end{conjecture}
+
+The upper half is Theorem~\ref{thm:upper}; the lower constant $\frac23$
+of Corollary~\ref{cor:lower} is not expected to be sharp.
+
+\section{Formal verification}
+
+Theorems~\ref{thm:upper}, \ref{thm:start} and~\ref{thm:chord}, the bounds in
+Corollaries~\ref{cor}, \ref{cor:lower} and~\ref{cor:convex}, and the identity
+\eqref{eq:quad} in its closed form are formalised in Lean~4 (v4.31.0) with
+Mathlib; the main theorems depend only on the standard axioms
+\texttt{propext}, \texttt{Classical.choice} and \texttt{Quot.sound}. The formal
+statements quantify over sequences $x:\mathbb N\to\mathbb R$ in which each
+$x_n$ minimises Kritzinger's function $f_n$ over $[0,1]$ given
+$x_0,\dots,x_{n-1}$ (any tie-break), and also specialise to Kritzinger's
+sequence. The scope is as follows. $G_N$ is defined by its closed form
+$\sum_k(t-x_k)_+-Nt^2/2$, the $L^2$ discrepancy by Warnock's closed form, and
+the identity \eqref{eq:quad} is proved as
+$E_f(N)=-f'(1)G_N(1)+\int_0^1G_Nf''$; the classical identities equating these
+closed forms with $\int_0^tD_N$, $\int_0^1D_N^2$ and $-\int_0^1D_Nf'$ are not
+formalised. In the quadrature statements $f,f',f''$ are given on $\mathbb R$
+with $f''$ continuous; every $f\in C^2[0,1]$ extends to such a function. The
+remarks on sharpness (the operator-norm identity after \eqref{eq:quad} and
+equality for affine $f$) are proved in the text only.
+The Lean code, the experiment scripts and the data are available at
+\url{https://github.com/KoksalBerkay/bounded-integrated-discrepancy}.
+
+\medskip
+\noindent\textbf{AI assistance.} This work was carried out with the help of
+Claude Opus~5.5 in Claude Code and GPT-6.2 Sol in Codex; the chord invariant
+(Theorem~\ref{thm:chord}) and the sharpened constant $\frac23$ were found by
+GPT-6.2 Sol.
+
+\begin{thebibliography}{9}
+\bibitem{Cle} F.~Cl\'ement, \emph{Outperforming the best 1D
+low-discrepancy constructions with a greedy algorithm}, arXiv:2406.18132.
+\bibitem{Kri} R.~Kritzinger, \emph{Uniformly distributed sequences generated by
+a greedy minimization of the $L_2$ discrepancy}, Moscow J. Combin. Number
+Theory 11 (2022); arXiv:2109.06298.
+\bibitem{Sch} W.~M.~Schmidt, \emph{Irregularities of distribution VII}, Acta
+Arith. 21 (1972), 45--50.
+\bibitem{Ste} S.~Steinerberger, \emph{On combinatorial properties of greedy
+Wasserstein minimization}, J. Math. Anal. Appl. 532 (2024), 127940;
+arXiv:2207.08043.
+\end{thebibliography}
+
+\end{document}

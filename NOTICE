@@ -1,0 +1,7 @@
+Bounded integrated discrepancy of greedy L2 sequences
+Copyright 2026 Köksal Berkay Denktaş
+
+This product includes the Lean code, experiment scripts and data of the
+repository https://github.com/KoksalBerkay/bounded-integrated-discrepancy,
+licensed under the Apache License, Version 2.0 (see LICENSE).
+The paper text in paper/ is licensed under CC BY 4.0 (see paper/LICENSE.md).

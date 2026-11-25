@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Bounded integrated discrepancy of greedy L2 sequences, with a Lean formalization"
+authors:
+  - family-names: Denktaş
+    given-names: Köksal Berkay
+    affiliation: Politecnico di Torino
+    orcid: "https://orcid.org/0009-0008-9261-1007"
+version: 1.0.0
+date-released: 2026-11-25
+license: Apache-2.0
+repository-code: "https://github.com/KoksalBerkay/bounded-integrated-discrepancy"
+keywords:
+  - discrepancy theory
+  - uniform distribution
+  - greedy sequences
+  - quasi-Monte Carlo
+  - Lean 4
+  - formal verification
+abstract: >-
+  Every greedy L2 sequence on [0,1] started from the empty set, in particular
+  Kritzinger's sequence, has integrated discrepancy
+  G_N(t) = int_0^t (#{k <= N : x_k <= s} - N s) ds bounded by -2/3 <= G_N(t) <= 1/2
+  for all N and t. This answers a question of Steinerberger. Consequences include
+  |x_1 + ... + x_N - N/2| <= 1/2 and a bound on the quadrature error of every C^2
+  function that does not depend on N. All main results are formalised in Lean 4
+  with Mathlib.

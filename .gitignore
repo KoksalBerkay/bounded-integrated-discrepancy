@@ -1,0 +1,23 @@
+# Lean build outputs, toolchain and packages
+lean/.lake/
+*.olean
+*.ilean
+
+# LaTeX build outputs
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.pdf
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Generated data (regenerate with the commands in data/README.md)
+data/raw/
+
+# OS and editors
+.DS_Store
+.vscode/
+.idea/
