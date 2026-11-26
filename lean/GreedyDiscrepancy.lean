@@ -7,3 +7,7 @@ import GreedyDiscrepancy.Quadrature
 import GreedyDiscrepancy.LowerBound
 import GreedyDiscrepancy.QuadratureTwoSided
 import GreedyDiscrepancy.Integrals
+import GreedyDiscrepancy.StarDiscrepancy
+import GreedyDiscrepancy.LogStar
+import GreedyDiscrepancy.Existence
+import GreedyDiscrepancy.HalfOpen

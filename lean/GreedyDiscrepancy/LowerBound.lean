@@ -19,14 +19,14 @@ for every `N`.
 
 namespace GreedyDiscrepancy
 
-private noncomputable def chordGap (f : ℝ → ℝ) (a t b : ℝ) : ℝ :=
+noncomputable def chordGap (f : ℝ → ℝ) (a t b : ℝ) : ℝ :=
   ((b - t) * f a + (t - a) * f b) / (b - a) - f t
 
 private def chordBound (f : ℝ → ℝ) (B : ℝ) : Prop :=
   ∀ a t b : ℝ, 0 ≤ a → a ≤ t → t ≤ b → b ≤ 1 → a < b →
     chordGap f a t b ≤ B + Real.sqrt ((t - a) * (b - t))
 
-private lemma chordGap_append_outside (xs : List ℝ) {a t b x : ℝ}
+lemma chordGap_append_outside (xs : List ℝ) {a t b x : ℝ}
     (hab : a < b) (hat : a ≤ t) (htb : t ≤ b) (h : x ≤ a ∨ b ≤ x) :
     chordGap (G (xs ++ [x])) a t b =
       chordGap (G xs) a t b - (t - a) * (b - t) / 2 := by
@@ -41,7 +41,7 @@ private lemma chordGap_append_outside (xs : List ℝ) {a t b x : ℝ}
       max_eq_right (by linarith : t - x ≤ 0)]
     field_simp [hn] ; ring
 
-private lemma chordGap_append_at_max {xs : List ℝ} {a b x : ℝ}
+lemma chordGap_append_at_max {xs : List ℝ} {a b x : ℝ}
     (hx : IsGreedyStep xs x) (ha : 0 ≤ a) (hb : b ≤ 1) (hax : a < x) (hxb : x < b) :
     chordGap (G (xs ++ [x])) a x b ≤ (x - a) * (b - x) / (b - a) := by
   have hp : 0 < b - a := by linarith
@@ -63,26 +63,26 @@ private lemma chordGap_append_at_max {xs : List ℝ} {a b x : ℝ}
   rw [heq]
   linarith
 
-private lemma chordGap_split_left (f : ℝ → ℝ) {a t x b : ℝ}
+lemma chordGap_split_left (f : ℝ → ℝ) {a t x b : ℝ}
     (hax : a < x) (hxb : x < b) :
     chordGap f a t b = chordGap f a t x + (t - a) / (x - a) * chordGap f a x b := by
   unfold chordGap
   field_simp [ne_of_gt (sub_pos.mpr hax), (by linarith : b - a ≠ 0)]
   ; ring
 
-private lemma chordGap_split_right (f : ℝ → ℝ) {a t x b : ℝ}
+lemma chordGap_split_right (f : ℝ → ℝ) {a t x b : ℝ}
     (hax : a < x) (hxb : x < b) :
     chordGap f a t b = chordGap f x t b + (b - t) / (b - x) * chordGap f a x b := by
   unfold chordGap
   field_simp [ne_of_gt (sub_pos.mpr hxb), (by linarith : b - a ≠ 0)]
   ; ring
 
-private lemma sqrt_amgm {u v : ℝ} (hu : 0 ≤ u) (hv : 0 ≤ v) :
+lemma sqrt_amgm {u v : ℝ} (hu : 0 ≤ u) (hv : 0 ≤ v) :
     Real.sqrt (u * v) ≤ (u + v) / 2 := by
   apply (Real.sqrt_le_iff).2
   exact ⟨by linarith, by nlinarith [sq_nonneg (u - v)]⟩
 
-private lemma sqrt_chord_split {u v w : ℝ} (hu : 0 ≤ u) (hv : 0 ≤ v) (hw : 0 ≤ w)
+lemma sqrt_chord_split {u v w : ℝ} (hu : 0 ≤ u) (hv : 0 ≤ v) (hw : 0 ≤ w)
     (hL : 0 < u + v + w) :
     Real.sqrt (u * v) + u * w / (u + v + w) ≤ Real.sqrt (u * (v + w)) := by
   set s := Real.sqrt (u * v)
@@ -380,7 +380,7 @@ theorem greedy_G_ge_2997_over_4160 (x : ℕ → ℝ) (hx : ∀ n, IsGreedyStep (
 
 
 
-private lemma sqrt_chord_split_sharp {u v w : ℝ} (hu : 0 ≤ u) (hv : 0 ≤ v) (hw : 0 ≤ w)
+lemma sqrt_chord_split_sharp {u v w : ℝ} (hu : 0 ≤ u) (hv : 0 ≤ v) (hw : 0 ≤ w)
     (hL : 0 < u + v + w) (hL1 : u + v + w ≤ 1) :
     Real.sqrt (u * v) - u * v + u * w / (u + v + w) ≤
       Real.sqrt (u * (v + w)) - u * (v + w) / 2 := by

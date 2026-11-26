@@ -53,7 +53,7 @@ def StarDiscLE (xs : List ℝ) (C : ℝ) : Prop :=
 
 /-- Kritzinger's conjecture (arXiv:2109.06298; Conjecture 2.2 in
 arXiv:2406.18132): the star discrepancy of the first `n` points is `O(log n)`.
-Stated, not proved. -/
+Proved in `LogStar.lean` (`kritzinger_conjecture_holds`). -/
 def KritzingerConjecture : Prop :=
   ∀ x : ℕ → ℝ, IsKritzingerSeq x →
     ∃ C : ℝ, ∀ n : ℕ, 2 ≤ n → StarDiscLE (pref x n) (C * Real.log n)
