@@ -8,6 +8,10 @@ paper/*.aux
 paper/*.log
 paper/*.out
 paper/*.pdf
+paper2/*.aux
+paper2/*.log
+paper2/*.out
+paper2/*.pdf
 
 # Python
 __pycache__/

@@ -53,3 +53,41 @@ empirical.
 
 - Every `N ≤ 300000`, with the maximum and minimum of `G_N` tracked separately:
   `−0.48764 < G_N < 0.49086`.
+
+# Second paper: logarithmic star discrepancy
+
+Done on 2026-11-26 by the author with Claude Opus 5.5 (in Claude Code); reviewed
+by GPT-6.2 Sol (in Codex). Every theorem is checked by the Lean kernel.
+
+## 7. Search for the sharp bound −1/2 (Claude; negative results, not in the repository)
+
+- The least chord-type invariant, LP families of linear invariants on grids, and
+  k-step induction all stop short of −1/2 (about −0.57 and −0.545). In the grid
+  model the exact reachable set has minimum −1/2. A proof would need a
+  non-convex invariant. The sharp bound remains open.
+
+## 8. Repair of arbitrary starts (Claude)
+
+- The excess over the envelopes moves to the left and shrinks at every step,
+  which gives `G_N ≤ t/2 + (m−1/2)²/(2N)`.
+- The chord functions `√p − (1−μ)p/2` keep a decaying excess, which gives
+  `G_N ≥ −2/3 − O(m/√N)` and universal limits for every initial list.
+
+## 9. Logarithmic star discrepancy (Claude)
+
+- Observation: with a symmetric chord, the chord invariant of the first paper
+  says that the second differences of `G` are at most `2h`. A dyadic argument
+  from a local excess of `D`, with the envelopes, gives `D*_N ≤ ⌈log₂ N⌉ + 3`.
+  This is the first part of Kritzinger's Conjecture 2.
+- Formalised in Lean, together with existence and uniqueness of the
+  sequence, Kritzinger's search space `[0,1)`, and the extension to arbitrary
+  initial lists (`⌈log₂ N⌉ + 3 + 3m²`).
+- Literature check (web, arXiv API, OpenAlex citations of Kritzinger 2022 and
+  Steinerberger 2024): no earlier proof found.
+
+## 10. Independent review (GPT-6.2 Sol, two rounds)
+
+- Verdict: the main theorem is correct and appears new; no critical issue.
+- Fixes made after the review: corrected numerical statements, more explicit
+  proofs, the Lean revision pinned, and an axiom allowlist in `check.sh` that
+  matches theorems by name.

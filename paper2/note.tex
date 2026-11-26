@@ -1,0 +1,513 @@
+\documentclass[11pt]{amsart}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb,amsthm,mathtools,hyperref,booktabs}
+\usepackage[margin=1.1in]{geometry}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\lean}[1]{\texttt{\small #1}}
+\newcommand{\clog}{\lceil\log_2N\rceil}
+
+\title[K.~B.~Denkta\c{s} \,---\, Greedy $L^2$ sequences have logarithmic star discrepancy]{Greedy $L^2$ sequences have logarithmic star discrepancy, with a Lean formalization}
+\author{K\"oksal Berkay Denkta\c{s}}
+\address{B.Sc.\ student (third year) in Computer Engineering, Politecnico di Torino, Italy}
+\urladdr{https://orcid.org/0009-0008-9261-1007}
+\date{\today}
+
+\begin{document}
+
+\begin{abstract}
+Kritzinger's greedy $L^2$ sequence on $[0,1]$ starts at $\frac12$ and adds, at
+each step, the least point that minimises the $L^2$ star discrepancy of the
+extended list. Kritzinger conjectured that it is a low-discrepancy sequence,
+i.e.\ that its star discrepancy is $O(\log N)$. We prove this: for every greedy
+$L^2$ sequence started from the empty set (with any tie-break), every $N\ge1$
+and every $t\in[0,1]$,
+\[
+\bigl|\#\{k\le N:x_k\le t\}-Nt\bigr|\ \le\ \lceil\log_2N\rceil+3 .
+\]
+For greedy continuations of an arbitrary initial list of $m$ points the bound
+becomes $\lceil\log_2N\rceil+3+3m^2$ for $N\ge2m$, and the integrated
+discrepancy eventually lies in $[-\frac23-\varepsilon,\frac12+\varepsilon]$ for
+every $\varepsilon>0$, whatever the initial list. The proof starts from the chord
+invariant for the integrated discrepancy found in earlier work: for
+symmetric chords it says that, at every scale, the average of the local
+discrepancy cannot increase by more than $2$ across a point, and a dyadic
+argument turns this into a logarithmic bound. All results are verified in Lean~4
+with Mathlib, including Kritzinger's conjecture in his own formulation and the
+existence and uniqueness of his sequence.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+For points $x_1,\dots,x_N\in[0,1]$ let
+\[
+D_N(t)=\#\{k\le N:x_k\le t\}-Nt,\qquad D_N^-(t)=\#\{k\le N:x_k<t\}-Nt ,
+\]
+and let $D_N^*=\sup_{t\in[0,1]}|D_N^-(t)|$ be the (unnormalised) star
+discrepancy. By Schmidt's theorem \cite{Sch} every infinite sequence has
+$D_N^*\ge c\log N$ for infinitely many $N$; sequences attaining this order, such
+as the van der Corput sequence, are called low-discrepancy sequences
+\cite{Kri}.
+
+Kritzinger \cite{Kri} proposed a greedy construction: $x_1=\frac12$ and, given
+$x_1,\dots,x_N$, choose $x_{N+1}$ as the least minimiser over $[0,1)$ of the
+squared $L^2$ star discrepancy $\int_0^1D_{N+1}^-(t)^2\,dt$ of the extended list. He
+proved that $x_N\in\{\frac{2i+1}{2N}\}$ and that the $L^2$ discrepancy is
+$O(\sqrt N)$, and stated:
+
+\begin{conjecture}[{\cite[Conjecture 2]{Kri}}]\label{conj:kri}
+The sequence is a low-discrepancy sequence, i.e.\ $D_N^*=O(\log N)$. Moreover
+$\limsup_N D_N^*/\log N<\frac1{3\log2}$, the constant of the van der Corput
+sequence.
+\end{conjecture}
+
+Its first part, the order of growth, is repeated in normalised form as
+\cite[Conjecture 2.2]{Cle}, where the sequence is also observed to be numerically
+competitive with the best one-dimensional constructions. Steinerberger \cite{Ste} showed that the same sequences arise from
+greedy minimisation of the Wasserstein distance $W_2$, for every finite initial
+set, and proved that the integrated discrepancy
+$G_N(t)=\int_0^tD_N(s)\,ds$ satisfies $\max_t|G_N(t)|\le2N^{1/3}$ for infinitely
+many $N$. In \cite{Den} we proved $-\frac23\le G_N\le\frac12$ for all $N$ when the
+sequence starts from the empty set.
+
+\subsection*{Results}
+We call a sequence a \emph{greedy $L^2$ sequence} if every $x_{N+1}$ is
+\emph{some} minimiser over $[0,1]$ of the $L^2$ star discrepancy of
+$(x_1,\dots,x_N,x)$; Kritzinger's sequence is the one with the least-minimiser
+tie-break (Section~\ref{sec:kri}).
+
+\begin{theorem}\label{thm:main}
+Let $(x_k)$ be a greedy $L^2$ sequence started from the empty set. For every
+$N\ge1$ and every $t\in[0,1]$,
+\[
+D_N(t)\le\clog+3\qquad\text{and}\qquad -D_N^-(t)\le\clog+3 .
+\]
+In particular $D_N^*\le\clog+3\le\frac{\log N}{\log2}+4$, and the first part of
+Conjecture~\ref{conj:kri} holds.
+\end{theorem}
+
+The second part of Conjecture~\ref{conj:kri}, the constant, remains open: our
+constant $\frac1{\log2}\approx1.44$ is larger than $\frac1{3\log2}\approx0.48$,
+while numerically (empirical, every $N\le3\cdot10^4$, data of \cite{Den},
+\texttt{experiments/paper2\_numerics.py})
+$D_N^*\le0.342\log N$ for $10^3\le N\le3\cdot10^4$ (the ratio $D_N^*/\log N$ peaks
+at $N=3262$ in this range), and
+$D_{30000}^*=\frac{943}{407}\approx0.225\log 30000$.
+
+\begin{theorem}\label{thm:from}
+Let $x_1,\dots,x_m\in[0,1]$, $m\ge1$, be an arbitrary list (repetitions allowed and
+counted with multiplicity) and let every later term be a greedy step. For $N\ge2m$ and $t\in[0,1]$,
+\[
+D_N(t)\le\clog+3+3m^2\qquad\text{and}\qquad -D_N^-(t)\le\clog+3+3m^2 .
+\]
+\end{theorem}
+
+\begin{theorem}\label{thm:universal}
+In the setting of Theorem~\ref{thm:from}, for all $N\ge m$ and $t\in[0,1]$,
+$G_N(t)\le\frac12+\frac{(m-\frac12)^2}{2N}$ and
+$\bigl|\sum_{k\le N}x_k-\frac N2\bigr|\le\frac12+\frac{(m-\frac12)^2}{2N}$; and
+for every $\varepsilon>0$ there is $N_0$ such that
+$-\frac23-\varepsilon\le G_N(t)\le\frac12+\varepsilon$ for all $N\ge N_0$ and all $t$.
+\end{theorem}
+
+So the limiting bounds $-\frac23\le G_N\le\frac12$ of \cite{Den} do not depend on
+the initial list, and neither does the leading term of Theorem~\ref{thm:from}.
+
+\subsection*{Idea of the proof}
+The key input from \cite{Den} is that $G_N$ never falls far below its chords. For
+symmetric chords this gives (Lemma~\ref{lem:sd})
+\[
+G_N(t+h)+G_N(t-h)-2G_N(t)\le2h ,
+\]
+i.e.\ the average of $D_N$ over $[t,t+h]$ exceeds its average over $[t-h,t]$ by
+at most $2$, at every scale $h$. Suppose $D_N(t_0)=K$. Just to the right of $t_0$
+the function $D_N$ decreases at rate $N$ and only jumps up, so its average on
+$[t_0,t_0+h]$ is at least $K-\frac12$ for $h\le\frac1N$. Doubling the scale step
+by step towards $0$ loses at most $1$ per step, so after about $\log_2N$ steps the
+average of $D_N$ on $[0,t_0]$ is at least $K-\log_2N-O(1)$. But that average is
+$G_N(t_0)/t_0\le\frac12$ by the envelope of \cite{Den}.
+
+\subsection*{Formal verification}
+All theorems, lemmas and corollaries of this paper are verified in Lean~4 with
+Mathlib; Section~\ref{sec:lean} lists the formal statements. In particular the
+Lean library contains the statement of Kritzinger's conjecture (written before
+this work, in \cite{Den}) and a proof of it, together with the existence and
+uniqueness of Kritzinger's sequence and the equivalence of his search space
+$[0,1)$ with $[0,1]$.
+
+\section{Preliminaries from \texorpdfstring{\cite{Den}}{[Den]}}
+
+Write $\psi(t)=\frac{t(1-t)}2$ and $(u)_+=\max(u,0)$. For points in $[0,1]$,
+\[
+G_N(t)=\sum_{k\le N}(t-x_k)_+-\frac{Nt^2}2,\qquad G_N(0)=0 ,
+\]
+and $G_N(t)=\int_0^tD_N$ for $t\ge0$ (\lean{G\_eq\_integral\_D}).
+
+\begin{lemma}[{\cite[Lemma 3]{Den}}]\label{lem:step}
+$x$ minimises the $L^2$ star discrepancy of $(x_1,\dots,x_N,x)$ over $[0,1]$ if
+and only if it maximises $G_N+\psi$ over $[0,1]$. Then
+$G_{N+1}=G_N+(\cdot-x)_+-(\cdot)^2/2$, and for all $u\in[0,1]$
+\begin{equation}\label{eq:max}
+G_N(u)\le G_N(x)+\psi(x)-\psi(u).
+\end{equation}
+\end{lemma}
+
+The link between the objective and $\int_0^1(D^-)^2$ is Warnock's formula, which
+is formalised (\lean{l2sq\_eq\_integral}, \lean{l2sq\_cons}).
+
+\begin{theorem}[{\cite[Theorem 4]{Den}}]\label{thm:env}
+For a greedy $L^2$ sequence started from the empty set and $t\in[0,1]$:
+$G_N(t)\le\frac t2$ and $G_N(t)\le G_N(1)+\frac{1-t}2$.
+\end{theorem}
+
+For $f:[0,1]\to\mathbb R$ and $a\le t\le b$, $a<b$, let
+$\Gamma_f(a,t,b)=\frac{(b-t)f(a)+(t-a)f(b)}{b-a}-f(t)$ and $p=(t-a)(b-t)$.
+
+\begin{theorem}[{\cite[Theorem 6]{Den}}]\label{thm:chord}
+For a greedy $L^2$ sequence started from the empty set,
+$\Gamma_{G_N}(a,t,b)\le\sqrt p-\frac p2$.
+\end{theorem}
+
+\begin{lemma}\label{lem:slope}
+For any points, $t\in\mathbb R$ and $L\ge0$,
+\[
+G_N(t+L)-G_N(t)\ge L\,D_N(t)-\frac{NL^2}2,\qquad
+G_N(t)-G_N(t-L)\le L\,D_N^-(t)+\frac{NL^2}2 .
+\]
+\lean{G\_increment\_ge, G\_decrement\_le}
+\end{lemma}
+
+\begin{proof}
+For each point, $(t+L-x_k)_+-(t-x_k)_+\ge L\,\mathbf 1[x_k\le t]$ and
+$(t-x_k)_+-(t-L-x_k)_+\le L\,\mathbf 1[x_k<t]$; add the quadratic terms.
+\end{proof}
+
+\section{Proof of Theorem~\ref{thm:main}}
+
+\begin{lemma}\label{lem:sd}
+For a greedy $L^2$ sequence started from the empty set and
+$0\le t-h\le t+h\le1$,
+\[
+G_N(t+h)+G_N(t-h)-2G_N(t)\le2h .
+\]
+\lean{greedy\_secondDiff}
+\end{lemma}
+
+\begin{proof}
+For $h=0$ both sides vanish. For $h>0$ apply Theorem~\ref{thm:chord} with $a=t-h$,
+$b=t+h$, $p=h^2$:
+$\frac{G_N(t-h)+G_N(t+h)}2-G_N(t)\le h-\frac{h^2}2\le h$.
+\end{proof}
+
+\begin{lemma}[dyadic propagation]\label{lem:dyadic}
+Let $G:\mathbb R\to\mathbb R$ satisfy
+$G(t+h)+G(t-h)-2G(t)\le ch+e$ whenever $0\le t-h\le t+h\le1$, with $c,e\ge0$.
+Let $h>0$, $J\in\mathbb N$, $t_0=2^Jh$, $t_0+h\le1$, and suppose
+$G(t_0+h)-G(t_0)\ge h(K-\frac12)$. Then
+\[
+G(t_0)-G(0)\ge t_0\Bigl(K-\tfrac12-c-\tfrac{cJ}2\Bigr)-e\,(2^{J+1}-1).
+\]
+Symmetrically, if $1-t_0=2^Jh$, $t_0-h\ge0$ and $G(t_0)-G(t_0-h)\le h(-K+\frac12)$,
+then $G(1)-G(t_0)\le(1-t_0)(-K+\frac12+c+\frac{cJ}2)+e(2^{J+1}-1)$.
+\lean{dyadic\_left\_E, dyadic\_right\_E; dyadic\_left, dyadic\_right ($c=2$, $e=0$)}
+\end{lemma}
+
+\begin{proof}
+Let $H_j=2^jh$ and $X_j=G(t_0)-G(t_0-H_j)$. The hypothesis at $t_0$ with
+half-width $h$ gives $X_0\ge G(t_0+h)-G(t_0)-ch-e\ge h(K-\frac12-c)-e$. For
+$j<J$, the hypothesis at $t_0-H_j$ with half-width $H_j$ (note
+$t_0-2H_j\ge0$) gives $G(t_0-H_j)-G(t_0-2H_j)\ge X_j-cH_j-e$, hence
+$X_{j+1}\ge2X_j-cH_j-e$. By induction
+$X_j\ge H_j(K-\frac12-c-\frac{cj}2)-e(2^{j+1}-1)$, and $H_J=t_0$. The second
+statement is the mirror image, run to the right.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Let $J=\clog$, so $N\le2^J$.
+
+\emph{Excess.} Let $K=D_N(t_0)$ and suppose $K\ge1$. Since
+$\#\{k:x_k\le t_0\}\le N$, $t_0\le1-\frac1N$. If $t_0=0$, Lemma~\ref{lem:slope}
+with $L=\frac1N$ gives $G_N(\frac1N)\ge\frac{K-1/2}N$, and
+$G_N(\frac1N)\le\frac1{2N}$ by Theorem~\ref{thm:env}, so $K\le1$. If $t_0>0$, let
+$h=t_0/2^J\le\frac1N$. Then $t_0+h\le1$ and, by Lemma~\ref{lem:slope},
+$G_N(t_0+h)-G_N(t_0)\ge hK-\frac{Nh^2}2\ge h(K-\frac12)$. Lemma~\ref{lem:dyadic}
+with $c=2$, $e=0$ (Lemma~\ref{lem:sd}) and $G_N(0)=0$ gives
+$G_N(t_0)\ge t_0(K-\frac52-J)$. Since $G_N(t_0)\le\frac{t_0}2$, $K\le J+3$.
+
+\emph{Deficit.} Let $K=-D_N^-(t_0)\ge1$; then $t_0\ge\frac1N$. If $t_0=1$,
+Lemma~\ref{lem:slope} with $L=\frac1N$ and
+$G_N(1-\frac1N)\le G_N(1)+\frac1{2N}$ give $K\le1$. Otherwise let
+$h=(1-t_0)/2^J\le\frac1N$; then $t_0-h\ge0$ and
+$G_N(t_0)-G_N(t_0-h)\le-hK+\frac{Nh^2}2\le h(-K+\frac12)$. The second part of
+Lemma~\ref{lem:dyadic} gives $G_N(1)-G_N(t_0)\le(1-t_0)(-K+\frac52+J)$, while
+$G_N(1)-G_N(t_0)\ge-\frac{1-t_0}2$ by Theorem~\ref{thm:env}. So $K\le J+3$.
+\end{proof}
+
+\begin{remark}
+The proof uses only Lemma~\ref{lem:sd}, the two envelopes, $G_N(0)=0$ and the
+slope estimates of Lemma~\ref{lem:slope}, which hold because $D_N$ has slope $-N$
+between points and only jumps up. Hence any point set whose $G_N$ has second
+differences $O(h)$ and satisfies the envelopes has logarithmic star discrepancy.
+\end{remark}
+
+\section{Kritzinger's formulation}\label{sec:kri}
+
+Kritzinger minimises over $[0,1)$, and the library over $[0,1]$. With
+$f_N(x)=-2\sum_k\max(x_k,x)+(N+1)x^2-x$ (the part of the $L^2$ discrepancy of the
+extended list that depends on $x$; \lean{l2sq\_cons}), the inequality
+$\max(a,1)-\max(a,y)\le1-y$ gives
+\[
+f_N(1)-f_N(y)\ge(1-y)\bigl((N+1)y-N\bigr)>0\qquad\text{for }\tfrac N{N+1}<y<1 ,
+\]
+so $1$ is never a minimiser over $[0,1]$ and the minimisers over $[0,1)$ and over
+$[0,1]$ coincide (\lean{isGreedyStep\_iff\_HO}).
+
+\begin{proposition}\label{prop:exist}
+Kritzinger's sequence exists and is unique: there is exactly one sequence with
+$x_1=\frac12$ in which every $x_{N+1}$ is the least minimiser of $f_N$ over
+$[0,1)$, equivalently over $[0,1]$.
+\lean{exists\_unique\_kritzingerSeqHO, exists\_kritzingerSeq, kritzingerSeq\_unique}
+\end{proposition}
+
+\begin{proof}
+$f_N$ is continuous, so its minimisers on $[0,1]$ form a nonempty closed set, which
+contains its infimum. Uniqueness follows by induction.
+\end{proof}
+
+\begin{corollary}\label{cor:kri}
+For Kritzinger's sequence, $D_N^*\le\frac5{\log2}\log N$ for all $N\ge2$.
+\lean{greedy\_star\_le\_log, kSeq\_star\_le\_log}; in the existential form of
+\cite[Conjecture 2]{Kri}: \lean{kritzinger\_conjecture\_holds},
+\lean{kritzinger\_conjecture\_halfOpen}.
+\end{corollary}
+
+\section{Arbitrary initial lists}\label{sec:from}
+
+In this section $x_1,\dots,x_m\in[0,1]$ is an arbitrary list ($m\ge1$, repetitions
+allowed) and every later term is a greedy step.
+
+\begin{theorem}\label{thm:repair}
+For all $N\ge m$ and $t\in[0,1]$,
+\[
+G_N(t)\le\frac t2+\frac{(m-\frac12)^2}{2N},\qquad
+G_N(t)\le G_N(1)+\frac{1-t}2+\frac{(m-\frac12)^2}{2N}.
+\]
+\lean{envelope\_repair, repair\_consequences}
+\end{theorem}
+
+\begin{proof}
+Let $e_N(t)=G_N(t)-\frac t2$ and $x=x_{N+1}$. If $t\le x$,
+$e_{N+1}(t)=e_N(t)-\frac{t^2}2$; if $t>x$, \eqref{eq:max} gives
+$e_{N+1}(t)\le e_N(x)-\frac{x^2}2$. So $e_{N+1}(t)\le e_N(s)-\frac{s^2}2$ with
+$s=\min(t,x)\le t$, and by induction
+$e_{m+k}(t)\le\max_{0\le s\le t}(e_m(s)-\frac{ks^2}2)$. Since $(s-x_j)_+\le s$,
+$e_m(s)\le(m-\frac12)s-\frac{ms^2}2$, and the maximum over all real $s$ of
+$(m-\frac12)s-\frac{(m+k)s^2}2$ is $\frac{(m-1/2)^2}{2(m+k)}$, which bounds the
+maximum over $s\in[0,t]$. The second inequality is the mirror image (with
+$s=\max(t,x)$ and $(1-s)^2/2$). Since $t\le1$ the first gives the bound on $G_N$, and
+$t=1$, $t=0$ together with $G_N(1)=\frac N2-\sum_kx_k$ give the bound on the sum.
+\end{proof}
+
+\begin{theorem}\label{thm:chordrepair}
+Let $\mu\in[0,1]$ and $\varphi_\mu(p)=\sqrt p-(1-\mu)\frac p2$. For $N\ge m$ and
+$0\le a\le t\le b\le1$, $a<b$, there is $q\in[0,p]$ with
+\[
+\Gamma_{G_N}(a,t,b)\le\varphi_\mu(p)+\frac m2\sqrt q-\frac{\mu(N-m)}2\,q ;
+\]
+in particular $\Gamma_{G_N}(a,t,b)\le\varphi_\mu(p)+\frac{m^2}{8\mu(N-m)}$ if
+$\mu>0$ and $N>m$. \lean{greedy\_chordRepair, excess\_le}
+\end{theorem}
+
+\begin{proof}
+Write $\Gamma=\varphi_\mu+\beta$. If the new point $x$ is outside $(a,b)$, the ramp
+$(\cdot-x)_+$ is affine on $[a,b]$ and $\Gamma$ drops by $\frac p2$. If
+$a<x<b$ and $t\le x$, then
+$\Gamma'(a,t,b)=\Gamma'(a,t,x)+\frac{t-a}{x-a}\Gamma'(a,x,b)$, where
+$\Gamma'(a,t,x)=\Gamma(a,t,x)-\frac{p'}2$ with $p'=(t-a)(x-t)$, and
+$\Gamma'(a,x,b)\le\frac{(x-a)(b-x)}{b-a}$ by \eqref{eq:max} \cite{Den}. The bridge
+inequalities of \cite{Den},
+\[
+\sqrt{uv}-uv+\tfrac{uw}L\le\sqrt{u(v+w)}-\tfrac{u(v+w)}2,\qquad
+\sqrt{uv}+\tfrac{uw}L\le\sqrt{u(v+w)}
+\]
+($u=t-a$, $v=x-t$, $w=b-x$, $L=b-a\le1$), combined with weights $1-\mu$ and $\mu$,
+give $\beta'(a,t,b)\le\beta(a,t,x)-\mu\frac{p'}2$. The case $x<t$ is
+symmetric. So the excess either drops by $\frac p2$ on the same interval or moves
+to a sub-interval containing $t$, with smaller $p$, and drops by $\mu$ times its
+own $\frac p2$. Formally, we prove by induction on $N\ge m$ that for every
+$(a,t,b)$ there is a witness $q\in[0,p]$ with
+$\beta\le\frac m2\sqrt q-\frac{\mu(N-m)}2q$. At $N=m$ take $q=p$: each ramp has chord
+gap at most $\frac{uv}{u+v}\le\frac{\sqrt p}2$ (with $u=t-a$, $v=b-t$), the term
+$-\frac{mt^2}2$ contributes $-\frac{mp}2\le0$, and $\varphi_\mu(p)\ge0$ since
+$p\le\frac14$. In the outside case keep the witness and use $\mu q\le p$. In the
+inside case take the witness of the child interval and use $q\le p'\le p$; the
+extra drop $\mu\frac{p'}2\ge\mu\frac q2$ gives the coefficient $\frac{\mu(N+1-m)}2$.
+This covers $\mu=0$, $p=0$ and $t=x$. The second bridge inequality follows from
+$r=\sqrt{u(v+w)}\le\frac L2$, $s=\sqrt{uv}\le r$ and $uw=(r-s)(r+s)$:
+$\frac{uw}L\le\frac{(r-s)\,2r}{L}\le r-s$. Finally, for $d=\mu(N-m)>0$,
+$\frac m2\sqrt q-\frac d2q\le\frac{m^2}{8d}$ by completing the square.
+\end{proof}
+
+\begin{theorem}\label{thm:lower}
+For $N>m$, $\mu\in(0,1]$ and $t\in[0,1]$,
+\[
+G_{N+1}(t)\ge-\frac23-\frac\mu8-\frac{(m-\frac12)^2}{2(N+1)}-\frac{m^2}{8\mu(N-m)} .
+\]
+\lean{greedy\_G\_lower\_repair}
+\end{theorem}
+
+\begin{proof}
+As in \cite[Corollary 7]{Den}. The last point $x=x_{N+1}$ satisfies
+$G_{N+1}(x)\ge-\frac x2$ by \eqref{eq:max} at $u=0$. Also $G_{N+1}(0)=0$, and
+$G_{N+1}(1)\ge-\frac12-\frac{(m-1/2)^2}{2(N+1)}$ by Theorem~\ref{thm:repair}.
+On $[0,x]$ or $[x,1]$ the chord is at least $-\frac t2$ minus that error, and the
+gap of $G_{N+1}$ is the gap of $G_N$ minus $\frac p2$. By
+Theorem~\ref{thm:chordrepair},
+$G_{N+1}(t)\ge-\frac t2-\delta-\sqrt p+p-\frac{\mu p}2-E$ with
+$\delta=\frac{(m-1/2)^2}{2(N+1)}$, $E=\frac{m^2}{8\mu(N-m)}$. Now
+$\sqrt p\le\frac16+\frac32p$, $\frac t2+\frac p2\le\frac t2+\frac{t(1-t)}2\le\frac12$ and
+$\frac{\mu p}2\le\frac\mu8$ give the claim; at $t=x$ use $G_{N+1}(x)\ge-\frac x2$
+directly.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:universal}]
+The first two claims are Theorem~\ref{thm:repair} at $t=1$ and $t=0$. For the
+third, take $\mu=\min(\varepsilon,1)$ in Theorem~\ref{thm:lower}, so that
+$\frac\mu8\le\frac\varepsilon8$, and $N$ so large that the two remaining error terms
+are at most $\frac\varepsilon4$ and $\frac\varepsilon8$
+(\lean{greedy\_G\_eventually}).
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:from}]
+Theorem~\ref{thm:chordrepair} with $\mu=1$ gives, for $N>m$, second differences
+$G_N(t+h)+G_N(t-h)-2G_N(t)\le2h+e$ with $e=\frac{m^2}{4(N-m)}$
+(\lean{secondDiff\_from}). Let $\delta=\frac{(m-1/2)^2}{2N}$ and $N\ge2m$, so that
+$4eN\le2m^2$ and $N\delta\le\frac{m^2}2$.
+
+Let $K=D_N(t_0)\ge1$; as in Theorem~\ref{thm:main}, $K\ge1$ gives
+$t_0+\frac1N\le1$ (and $t_0\ge\frac1N$ for a deficit), so the first step stays in
+$[0,1]$. If $Nt_0\le1$, Lemma~\ref{lem:slope} with $L=\frac1N$,
+Theorem~\ref{thm:repair} at $t_0+\frac1N$ and $G_N(t_0)\ge-\frac{Nt_0^2}2$ give
+$K\le2+N\delta$. If $Nt_0>1$, choose $J\le\clog$ with $Nt_0\le2^J<2Nt_0$
+(\lean{exists\_scale}) and $h=t_0/2^J\in(\frac1{2N},\frac1N]$.
+Lemma~\ref{lem:dyadic} with $c=2$ and $G_N(t_0)\le\frac{t_0}2+\delta$ give
+\[
+t_0\bigl(K-\tfrac52-J\bigr)-e(2^{J+1}-1)\le\tfrac{t_0}2+\delta ,
+\]
+and $e\,2^{J+1}\le4eNt_0$, $\delta\le t_0N\delta$, so
+$K\le J+3+4eN+N\delta\le\clog+3+\frac52m^2$. The deficit is symmetric. In the
+case $N(1-t_0)\le1$ use $G_N(1)-G_N(t_0)\le\frac{N(1-t_0)^2}2$.
+\lean{greedy\_star\_log\_from}
+\end{proof}
+
+\begin{remark}
+The leading term $\log_2N$ does not depend on the initial list, and $m$ only
+enters an additive constant. The repair results give the same flavour for
+$G_N$: the excesses over the bounds of \cite{Den} decay at rates
+$O(m^2/N)$ and $O(m/\sqrt N)$.
+\end{remark}
+
+\section{Remarks and open problems}
+
+\begin{enumerate}
+\item \emph{The constant.} Theorem~\ref{thm:main} gives
+$\limsup D_N^*/\log N\le\frac1{\log2}$. Kritzinger conjectures
+$<\frac1{3\log2}$; numerically (empirical) $D_N^*\le0.342\log N$ for
+$10^3\le N\le3\cdot10^4$. The loss comes from the factor $2$ in Lemma~\ref{lem:sd}
+and from $\sqrt p$ in Theorem~\ref{thm:chord}.
+\item \emph{The $L^2$ discrepancy.} Kritzinger's Conjecture~1, that
+$\int_0^1(D_N^-)^2=O(\log N)$ with a constant below that of the symmetrised van der
+Corput sequence, remains open; Theorem~\ref{thm:main} only gives the trivial
+consequence $\int_0^1(D_N^-)^2\le(D_N^*)^2$.
+\item \emph{The sharp bound for $G_N$.} \cite{Den} conjectures
+$|G_N|\le\frac12$. Numerically (empirical) even $G_N(t)\ge-t+\frac{t^2}2$ holds for
+$N\le3\cdot10^4$.
+\item \emph{Higher dimensions and other kernels.} Clément \cite{Cle} conjectures
+$O((\log N)^d/N)$ for the normalised discrepancy, i.e.\ $O((\log N)^d)$ in our
+unnormalised convention, in dimension $d$. For the greedy construction with a
+log-sine kernel, Steinerberger \cite{Ste19} conjectures logarithmic discrepancy;
+Pausinger \cite{Pau} obtained it when the construction is started from a single
+point, via permuted van der Corput sequences, while general initial sets remain open.
+Whether a second-difference argument applies there is open.
+\end{enumerate}
+
+\section{Formal verification}\label{sec:lean}
+
+The Lean~4 library is available at
+\url{https://github.com/KoksalBerkay/bounded-integrated-discrepancy}, release
+\texttt{v2.0.0}, which is the revision described here. Lean v4.31.0 and Mathlib
+(rev \texttt{fabf563}) are pinned in \texttt{lean/}. To verify, run
+\texttt{lake exe cache get} and then \texttt{./check.sh} in the directory
+\texttt{lean/}: it builds the library, prints the axioms of every theorem listed in
+\texttt{lean/AxiomAudit.lean} (all Lean names in the table below, and more) and
+fails unless each of them is printed and depends only on \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}.
+Points are indexed from $0$ in Lean (\texttt{pref x n} is $x_0,\dots,x_{n-1}$), and
+$D_N^*$ is \texttt{StarDiscLE} (unnormalised, intervals $[0,t)$), as in
+Kritzinger's definition.
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Statement & Lean name \\
+\midrule
+Lemma \ref{lem:slope} & \lean{G\_increment\_ge}, \lean{G\_decrement\_le} \\
+Lemma \ref{lem:sd} & \lean{greedy\_secondDiff} \\
+Lemma \ref{lem:dyadic} & \lean{dyadic\_left(\_E)}, \lean{dyadic\_right(\_E)} \\
+Theorem \ref{thm:main} & \lean{greedy\_star\_log}, \lean{greedy\_star\_le\_log} \\
+Corollary \ref{cor:kri} & \lean{greedy\_star\_le\_log}, \lean{kSeq\_star\_le\_log}; \lean{kritzinger\_conjecture\_holds}, \lean{kritzinger\_conjecture\_halfOpen} \\
+Proposition \ref{prop:exist} & \lean{exists\_unique\_kritzingerSeqHO}, \lean{isKritzingerSeq\_iff\_HO} \\
+Theorem \ref{thm:from} & \lean{greedy\_star\_log\_from}, \lean{secondDiff\_from}, \lean{exists\_scale} \\
+Theorem \ref{thm:repair} & \lean{envelope\_repair}, \lean{repair\_consequences} \\
+Theorem \ref{thm:chordrepair} & \lean{greedy\_chordRepair}, \lean{excess\_le} \\
+Theorem \ref{thm:lower} & \lean{greedy\_G\_lower\_repair} \\
+Theorem \ref{thm:universal} & \lean{repair\_consequences}, \lean{greedy\_G\_eventually} \\
+Integral forms & \lean{G\_eq\_integral\_D}, \lean{l2sq\_eq\_integral}, \lean{quadrature\_eq\_integral\_D} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The definitions \lean{IsGreedyStep}, \lean{IsKritzingerSeq}, \lean{StarDiscLE}
+and \lean{KritzingerConjecture} are those of \cite{Den}, unchanged;
+\lean{IsKritzingerSeqHO} and \lean{KritzingerConjectureHO} restate them with
+Kritzinger's search space $[0,1)$. The objective is linked to the $L^2$ star
+discrepancy by \lean{l2sq\_cons} and \lean{l2sq\_eq\_integral}. Numerical
+statements, marked empirical, are not part of the formalisation.
+
+\medskip
+\noindent\textbf{AI assistance.} This work was carried out with the help of
+Claude Opus~5.5 in Claude Code. The manuscript, the proofs, the Lean code and the
+literature search were reviewed by GPT-6.2 Sol in Codex. All theorems are checked
+by the Lean kernel.
+
+\begin{thebibliography}{9}
+\bibitem{Cle} F.~Cl\'ement, \emph{Outperforming the best 1D low-discrepancy
+constructions with a greedy algorithm}, arXiv:2406.18132.
+\bibitem{Den} K.~B.~Denkta\c{s}, \emph{Bounded integrated discrepancy of greedy
+$L^2$ sequences, with a Lean formalization} (2026), Zenodo,
+doi:10.5281/zenodo.24542921.
+\bibitem{Kri} R.~Kritzinger, \emph{Uniformly distributed sequences generated by
+a greedy minimization of the $L_2$ discrepancy}, Moscow J. Combin. Number
+Theory 11 (2022), 215--236; arXiv:2109.06298.
+\bibitem{Pau} F.~Pausinger, \emph{Greedy energy minimization can count in binary:
+point charges and the van der Corput sequence}, Ann. Mat. Pura Appl. (2021),
+doi:10.1007/s10231-020-00990-7; arXiv:1905.09641.
+\bibitem{Sch} W.~M.~Schmidt, \emph{Irregularities of distribution VII}, Acta
+Arith. 21 (1972), 45--50.
+\bibitem{Ste} S.~Steinerberger, \emph{On combinatorial properties of greedy
+Wasserstein minimization}, J. Math. Anal. Appl. 532 (2024), 127940;
+arXiv:2207.08043.
+\bibitem{Ste19} S.~Steinerberger, \emph{Dynamically defined sequences with small
+discrepancy}, arXiv:1902.03269.
+\end{thebibliography}
+\end{document}
