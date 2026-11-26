@@ -6,3 +6,4 @@ import GreedyDiscrepancy.EnvelopeGeneral
 import GreedyDiscrepancy.Quadrature
 import GreedyDiscrepancy.LowerBound
 import GreedyDiscrepancy.QuadratureTwoSided
+import GreedyDiscrepancy.Integrals

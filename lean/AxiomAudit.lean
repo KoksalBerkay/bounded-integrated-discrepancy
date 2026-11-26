@@ -32,3 +32,6 @@ import GreedyDiscrepancy
 #print axioms GreedyDiscrepancy.greedy_G_ge_2997_over_4160
 #print axioms GreedyDiscrepancy.greedy_G_lower_from_start
 #print axioms GreedyDiscrepancy.kritzinger_G_two_sided
+#print axioms GreedyDiscrepancy.G_eq_integral_D
+#print axioms GreedyDiscrepancy.l2sq_eq_integral
+#print axioms GreedyDiscrepancy.quadrature_eq_integral_D

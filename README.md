@@ -67,10 +67,13 @@ depends only on `propext`, `Classical.choice` and `Quot.sound`.
 | `lean/GreedyDiscrepancy/LowerBound.lean` | chord invariant, `G ≥ −2/3`, arbitrary starts |
 | `lean/GreedyDiscrepancy/Quadrature.lean` | quadrature identity, convex bounds |
 | `lean/GreedyDiscrepancy/QuadratureTwoSided.lean` | two-sided quadrature bound |
+| `lean/GreedyDiscrepancy/Integrals.lean` | the closed forms equal `∫D_N`, `∫D_N²` (Warnock) and `−∫D_N f'` |
 
 Scope of the formalisation: `G_N` and the L² discrepancy are defined by their
-closed forms. The classical identities linking them to integrals of `D_N` are
-not formalised (see the paper).
+closed forms. `Integrals.lean` proves that they equal the integrals of `D_N`
+they stand for. This file was added after the first version of the paper,
+which still describes these identities as not formalised. The remarks on
+sharpness in the paper are proved in the text only.
 
 ## Layout
 
