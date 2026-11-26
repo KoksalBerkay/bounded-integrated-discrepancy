@@ -38,6 +38,11 @@ import GreedyDiscrepancy
 #print axioms GreedyDiscrepancy.star_le_of_G_bounds
 #print axioms GreedyDiscrepancy.greedy_star_le_sqrt
 #print axioms GreedyDiscrepancy.kritzinger_star_le_sqrt
+#print axioms GreedyDiscrepancy.envelope_repair
+#print axioms GreedyDiscrepancy.repair_consequences
+#print axioms GreedyDiscrepancy.greedy_chordRepair
+#print axioms GreedyDiscrepancy.greedy_G_lower_repair
+#print axioms GreedyDiscrepancy.greedy_G_eventually
 #print axioms GreedyDiscrepancy.greedy_star_log
 #print axioms GreedyDiscrepancy.greedy_star_le_log
 #print axioms GreedyDiscrepancy.kritzinger_conjecture_holds
@@ -47,9 +52,15 @@ import GreedyDiscrepancy
 #print axioms GreedyDiscrepancy.isKritzingerSeq_iff_HO
 #print axioms GreedyDiscrepancy.kritzinger_conjecture_halfOpen
 #print axioms GreedyDiscrepancy.exists_unique_kritzingerSeqHO
+#print axioms GreedyDiscrepancy.greedy_star_log_from
 #print axioms GreedyDiscrepancy.greedy_secondDiff
 #print axioms GreedyDiscrepancy.dyadic_left
 #print axioms GreedyDiscrepancy.dyadic_right
+#print axioms GreedyDiscrepancy.dyadic_left_E
+#print axioms GreedyDiscrepancy.dyadic_right_E
 #print axioms GreedyDiscrepancy.G_increment_ge
 #print axioms GreedyDiscrepancy.G_decrement_le
+#print axioms GreedyDiscrepancy.excess_le
+#print axioms GreedyDiscrepancy.secondDiff_from
+#print axioms GreedyDiscrepancy.exists_scale
 #print axioms GreedyDiscrepancy.isGreedyStep_iff_HO

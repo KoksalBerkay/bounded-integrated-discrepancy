@@ -8,6 +8,9 @@ import GreedyDiscrepancy.LowerBound
 import GreedyDiscrepancy.QuadratureTwoSided
 import GreedyDiscrepancy.Integrals
 import GreedyDiscrepancy.StarDiscrepancy
+import GreedyDiscrepancy.Repair
+import GreedyDiscrepancy.RepairLower
 import GreedyDiscrepancy.LogStar
 import GreedyDiscrepancy.Existence
 import GreedyDiscrepancy.HalfOpen
+import GreedyDiscrepancy.LogStarFrom
