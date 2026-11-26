@@ -11,7 +11,7 @@ papers about **Kritzinger's greedy L² sequence** on `[0,1]`:
 1. *Bounded integrated discrepancy of greedy L² sequences, with a Lean
    formalization* (`paper/`, doi:10.5281/zenodo.24542921): `−2/3 ≤ G_N ≤ 1/2`.
 2. *Greedy L² sequences have logarithmic star discrepancy, with a Lean
-   formalization* (`paper2/`): the star discrepancy is at most
+   formalization* (`paper2/`, doi:10.5281/zenodo.24556274): the star discrepancy is at most
    `⌈log₂ N⌉ + 3`, which proves the order-of-growth part of Kritzinger's
    conjecture.
 
